@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.virtualPet.mapper.PetAttributeRecordMapper">
+    
+    <resultMap type="PetAttributeRecord" id="PetAttributeRecordResult">
+        <result property="id"    column="id"    />
+        <result property="petId"    column="pet_id"    />
+        <result property="attributeType"    column="attribute_type"    />
+        <result property="oldValue"    column="old_value"    />
+        <result property="newValue"    column="new_value"    />
+        <result property="changeAmount"    column="change_amount"    />
+        <result property="changeReason"    column="change_reason"    />
+        <result property="changeTime"    column="change_time"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectPetAttributeRecordVo">
+        select id, pet_id, attribute_type, old_value, new_value, change_amount, change_reason, change_time, create_time from pet_attribute_record
+    </sql>
+
+    <select id="selectPetAttributeRecordList" parameterType="PetAttributeRecord" resultMap="PetAttributeRecordResult">
+        <include refid="selectPetAttributeRecordVo"/>
+        <where>  
+            <if test="petId != null "> and pet_id = #{petId}</if>
+            <if test="attributeType != null  and attributeType != ''"> and attribute_type = #{attributeType}</if>
+        </where>
+    </select>
+    
+    <select id="selectPetAttributeRecordById" parameterType="Long" resultMap="PetAttributeRecordResult">
+        <include refid="selectPetAttributeRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertPetAttributeRecord" parameterType="PetAttributeRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into pet_attribute_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="petId != null">pet_id,</if>
+            <if test="attributeType != null and attributeType != ''">attribute_type,</if>
+            <if test="oldValue != null">old_value,</if>
+            <if test="newValue != null">new_value,</if>
+            <if test="changeAmount != null">change_amount,</if>
+            <if test="changeReason != null">change_reason,</if>
+            <if test="changeTime != null">change_time,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="petId != null">#{petId},</if>
+            <if test="attributeType != null and attributeType != ''">#{attributeType},</if>
+            <if test="oldValue != null">#{oldValue},</if>
+            <if test="newValue != null">#{newValue},</if>
+            <if test="changeAmount != null">#{changeAmount},</if>
+            <if test="changeReason != null">#{changeReason},</if>
+            <if test="changeTime != null">#{changeTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePetAttributeRecord" parameterType="PetAttributeRecord">
+        update pet_attribute_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="petId != null">pet_id = #{petId},</if>
+            <if test="attributeType != null and attributeType != ''">attribute_type = #{attributeType},</if>
+            <if test="oldValue != null">old_value = #{oldValue},</if>
+            <if test="newValue != null">new_value = #{newValue},</if>
+            <if test="changeAmount != null">change_amount = #{changeAmount},</if>
+            <if test="changeReason != null">change_reason = #{changeReason},</if>
+            <if test="changeTime != null">change_time = #{changeTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePetAttributeRecordById" parameterType="Long">
+        delete from pet_attribute_record where id = #{id}
+    </delete>
+
+    <delete id="deletePetAttributeRecordByIds" parameterType="String">
+        delete from pet_attribute_record where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
