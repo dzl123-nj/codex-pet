@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.virtualPet.mapper.PetItemMapper">
+    
+    <resultMap type="PetItem" id="PetItemResult">
+        <result property="id"    column="id"    />
+        <result property="itemName"    column="item_name"    />
+        <result property="itemType"    column="item_type"    />
+        <result property="itemDesc"    column="item_desc"    />
+        <result property="hungerChange"    column="hunger_change"    />
+        <result property="happinessChange"    column="happiness_change"    />
+        <result property="energyChange"    column="energy_change"    />
+        <result property="cleanlinessChange"    column="cleanliness_change"    />
+        <result property="healthChange"    column="health_change"    />
+        <result property="experienceReward"    column="experience_reward"    />
+        <result property="price"    column="price"    />
+        <result property="deleted"    column="deleted"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectPetItemVo">
+        select id, item_name, item_type, item_desc, hunger_change, happiness_change, energy_change, cleanliness_change, health_change, experience_reward, price, deleted, create_time, update_time from pet_item
+    </sql>
+
+    <select id="selectPetItemList" parameterType="PetItem" resultMap="PetItemResult">
+        <include refid="selectPetItemVo"/>
+        <where>  
+            <if test="itemName != null  and itemName != ''"> and item_name like concat('%', #{itemName}, '%')</if>
+            <if test="itemType != null  and itemType != ''"> and item_type = #{itemType}</if>
+        </where>
+    </select>
+    
+    <select id="selectPetItemById" parameterType="Long" resultMap="PetItemResult">
+        <include refid="selectPetItemVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertPetItem" parameterType="PetItem" useGeneratedKeys="true" keyProperty="id">
+        insert into pet_item
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="itemName != null and itemName != ''">item_name,</if>
+            <if test="itemType != null and itemType != ''">item_type,</if>
+            <if test="itemDesc != null">item_desc,</if>
+            <if test="hungerChange != null">hunger_change,</if>
+            <if test="happinessChange != null">happiness_change,</if>
+            <if test="energyChange != null">energy_change,</if>
+            <if test="cleanlinessChange != null">cleanliness_change,</if>
+            <if test="healthChange != null">health_change,</if>
+            <if test="experienceReward != null">experience_reward,</if>
+            <if test="price != null">price,</if>
+            <if test="deleted != null">deleted,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="itemName != null and itemName != ''">#{itemName},</if>
+            <if test="itemType != null and itemType != ''">#{itemType},</if>
+            <if test="itemDesc != null">#{itemDesc},</if>
+            <if test="hungerChange != null">#{hungerChange},</if>
+            <if test="happinessChange != null">#{happinessChange},</if>
+            <if test="energyChange != null">#{energyChange},</if>
+            <if test="cleanlinessChange != null">#{cleanlinessChange},</if>
+            <if test="healthChange != null">#{healthChange},</if>
+            <if test="experienceReward != null">#{experienceReward},</if>
+            <if test="price != null">#{price},</if>
+            <if test="deleted != null">#{deleted},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePetItem" parameterType="PetItem">
+        update pet_item
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="itemName != null and itemName != ''">item_name = #{itemName},</if>
+            <if test="itemType != null and itemType != ''">item_type = #{itemType},</if>
+            <if test="itemDesc != null">item_desc = #{itemDesc},</if>
+            <if test="hungerChange != null">hunger_change = #{hungerChange},</if>
+            <if test="happinessChange != null">happiness_change = #{happinessChange},</if>
+            <if test="energyChange != null">energy_change = #{energyChange},</if>
+            <if test="cleanlinessChange != null">cleanliness_change = #{cleanlinessChange},</if>
+            <if test="healthChange != null">health_change = #{healthChange},</if>
+            <if test="experienceReward != null">experience_reward = #{experienceReward},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="deleted != null">deleted = #{deleted},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePetItemById" parameterType="Long">
+        delete from pet_item where id = #{id}
+    </delete>
+
+    <delete id="deletePetItemByIds" parameterType="String">
+        delete from pet_item where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

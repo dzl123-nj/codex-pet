@@ -1,4 +1,4 @@
-package com.ruoyi.virtualPet.controller;
+package com.ruoyi.web.controller;
 
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
 
 /**
  * 宠物道具Controller
- * 
+ *
  * @author dzl
  * @date 2026-04-24
  */

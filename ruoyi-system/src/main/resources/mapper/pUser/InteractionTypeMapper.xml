@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.player.mapper.InteractionTypeMapper">
+    
+    <resultMap type="InteractionType" id="InteractionTypeResult">
+        <result property="id"    column="id"    />
+        <result property="typeName"    column="type_name"    />
+        <result property="typeDesc"    column="type_desc"    />
+        <result property="hungerChange"    column="hunger_change"    />
+        <result property="happinessChange"    column="happiness_change"    />
+        <result property="energyChange"    column="energy_change"    />
+        <result property="cleanlinessChange"    column="cleanliness_change"    />
+        <result property="healthChange"    column="health_change"    />
+        <result property="experienceReward"    column="experience_reward"    />
+        <result property="deleted"    column="deleted"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectInteractionTypeVo">
+        select id, type_name, type_desc, hunger_change, happiness_change, energy_change, cleanliness_change, health_change, experience_reward, deleted, create_time, update_time from interaction_type
+    </sql>
+
+    <select id="selectInteractionTypeList" parameterType="InteractionType" resultMap="InteractionTypeResult">
+        <include refid="selectInteractionTypeVo"/>
+        <where>  
+            <if test="typeName != null  and typeName != ''"> and type_name like concat('%', #{typeName}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectInteractionTypeById" parameterType="Long" resultMap="InteractionTypeResult">
+        <include refid="selectInteractionTypeVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertInteractionType" parameterType="InteractionType" useGeneratedKeys="true" keyProperty="id">
+        insert into interaction_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="typeName != null and typeName != ''">type_name,</if>
+            <if test="typeDesc != null">type_desc,</if>
+            <if test="hungerChange != null">hunger_change,</if>
+            <if test="happinessChange != null">happiness_change,</if>
+            <if test="energyChange != null">energy_change,</if>
+            <if test="cleanlinessChange != null">cleanliness_change,</if>
+            <if test="healthChange != null">health_change,</if>
+            <if test="experienceReward != null">experience_reward,</if>
+            <if test="deleted != null">deleted,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="typeName != null and typeName != ''">#{typeName},</if>
+            <if test="typeDesc != null">#{typeDesc},</if>
+            <if test="hungerChange != null">#{hungerChange},</if>
+            <if test="happinessChange != null">#{happinessChange},</if>
+            <if test="energyChange != null">#{energyChange},</if>
+            <if test="cleanlinessChange != null">#{cleanlinessChange},</if>
+            <if test="healthChange != null">#{healthChange},</if>
+            <if test="experienceReward != null">#{experienceReward},</if>
+            <if test="deleted != null">#{deleted},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateInteractionType" parameterType="InteractionType">
+        update interaction_type
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="typeName != null and typeName != ''">type_name = #{typeName},</if>
+            <if test="typeDesc != null">type_desc = #{typeDesc},</if>
+            <if test="hungerChange != null">hunger_change = #{hungerChange},</if>
+            <if test="happinessChange != null">happiness_change = #{happinessChange},</if>
+            <if test="energyChange != null">energy_change = #{energyChange},</if>
+            <if test="cleanlinessChange != null">cleanliness_change = #{cleanlinessChange},</if>
+            <if test="healthChange != null">health_change = #{healthChange},</if>
+            <if test="experienceReward != null">experience_reward = #{experienceReward},</if>
+            <if test="deleted != null">deleted = #{deleted},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteInteractionTypeById" parameterType="Long">
+        delete from interaction_type where id = #{id}
+    </delete>
+
+    <delete id="deleteInteractionTypeByIds" parameterType="String">
+        delete from interaction_type where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

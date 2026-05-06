@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.virtualPet.mapper.PetTypeMapper">
+    
+    <resultMap type="PetType" id="PetTypeResult">
+        <result property="id"    column="id"    />
+        <result property="typeName"    column="type_name"    />
+        <result property="typeDesc"    column="type_desc"    />
+        <result property="defaultAvatar"    column="default_avatar"    />
+        <result property="deleted"    column="deleted"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectPetTypeVo">
+        select id, type_name, type_desc, default_avatar, deleted, create_time, update_time from pet_type
+    </sql>
+
+    <select id="selectPetTypeList" parameterType="PetType" resultMap="PetTypeResult">
+        <include refid="selectPetTypeVo"/>
+        <where>  
+            <if test="typeName != null  and typeName != ''"> and type_name like concat('%', #{typeName}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectPetTypeById" parameterType="Long" resultMap="PetTypeResult">
+        <include refid="selectPetTypeVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertPetType" parameterType="PetType" useGeneratedKeys="true" keyProperty="id">
+        insert into pet_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="typeName != null and typeName != ''">type_name,</if>
+            <if test="typeDesc != null">type_desc,</if>
+            <if test="defaultAvatar != null">default_avatar,</if>
+            <if test="deleted != null">deleted,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="typeName != null and typeName != ''">#{typeName},</if>
+            <if test="typeDesc != null">#{typeDesc},</if>
+            <if test="defaultAvatar != null">#{defaultAvatar},</if>
+            <if test="deleted != null">#{deleted},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePetType" parameterType="PetType">
+        update pet_type
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="typeName != null and typeName != ''">type_name = #{typeName},</if>
+            <if test="typeDesc != null">type_desc = #{typeDesc},</if>
+            <if test="defaultAvatar != null">default_avatar = #{defaultAvatar},</if>
+            <if test="deleted != null">deleted = #{deleted},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePetTypeById" parameterType="Long">
+        delete from pet_type where id = #{id}
+    </delete>
+
+    <delete id="deletePetTypeByIds" parameterType="String">
+        delete from pet_type where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
