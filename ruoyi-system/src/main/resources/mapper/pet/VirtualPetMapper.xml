@@ -8,6 +8,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="id"    column="id"    />
         <result property="userId"    column="user_id"    />
         <result property="petTypeId"    column="pet_type_id"    />
+        <result property="petTypeName"    column="pet_type_name"    />
         <result property="petName"    column="pet_name"    />
         <result property="petAvatar"    column="pet_avatar"    />
         <result property="birthTime"    column="birth_time"    />
@@ -25,7 +26,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectVirtualPetVo">
-        select id, user_id, pet_type_id, pet_name, pet_avatar, birth_time, level, experience, hunger, happiness, energy, cleanliness, health, status, deleted, create_time, update_time from virtual_pet
+        select vp.id, vp.user_id, vp.pet_type_id, pt.type_name as pet_type_name, vp.pet_name, vp.pet_avatar, vp.birth_time, vp.level, vp.experience, vp.hunger, vp.happiness, vp.energy, vp.cleanliness, vp.health, vp.status, vp.deleted, vp.create_time, vp.update_time from virtual_pet vp left join pet_type pt on vp.pet_type_id = pt.id
     </sql>
 
     <select id="selectVirtualPetList" parameterType="VirtualPet" resultMap="VirtualPetResult">
@@ -39,7 +40,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <select id="selectVirtualPetById" parameterType="Long" resultMap="VirtualPetResult">
         <include refid="selectVirtualPetVo"/>
-        where id = #{id}
+        where vp.id = #{id}
     </select>
 
     <insert id="insertVirtualPet" parameterType="VirtualPet" useGeneratedKeys="true" keyProperty="id">

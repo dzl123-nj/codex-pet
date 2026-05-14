@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +36,11 @@ public class DeepSeekService
 
     public String chat(String systemPrompt, String userMessage)
     {
+        return chatWithHistory(systemPrompt, null, userMessage);
+    }
+
+    public String chatWithHistory(String systemPrompt, List<Map<String, String>> history, String userMessage)
+    {
         HttpURLConnection conn = null;
         try
         {
@@ -45,6 +52,21 @@ public class DeepSeekService
                 systemMsg.put("content", systemPrompt);
                 messages.add(systemMsg);
             }
+
+            if (history != null && !history.isEmpty())
+            {
+                int startIndex = Math.max(0, history.size() - 10);
+                for (int i = startIndex; i < history.size(); i++)
+                {
+                    Map<String, String> msg = history.get(i);
+                    JSONObject historyMsg = new JSONObject();
+                    String role = msg.get("role");
+                    historyMsg.put("role", "pet".equals(role) ? "assistant" : role);
+                    historyMsg.put("content", msg.get("content"));
+                    messages.add(historyMsg);
+                }
+            }
+
             JSONObject userMsg = new JSONObject();
             userMsg.put("role", "user");
             userMsg.put("content", userMessage);
@@ -53,6 +75,7 @@ public class DeepSeekService
             JSONObject requestBody = new JSONObject();
             requestBody.put("model", model);
             requestBody.put("messages", messages);
+            requestBody.put("temperature", 0.85);
 
             String jsonBody = requestBody.toJSONString();
             URL url = new URL(baseUrl + "/v1/chat/completions");
@@ -73,7 +96,17 @@ public class DeepSeekService
             int statusCode = conn.getResponseCode();
             if (statusCode != 200)
             {
-                logger.error("DeepSeek API 调用失败, 状态码: {}", statusCode);
+                StringBuilder errorBody = new StringBuilder();
+                try (BufferedReader errReader = new BufferedReader(
+                        new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8)))
+                {
+                    String line;
+                    while ((line = errReader.readLine()) != null)
+                    {
+                        errorBody.append(line);
+                    }
+                }
+                logger.error("DeepSeek API 调用失败, 状态码: {}, 响应: {}", statusCode, errorBody.toString());
                 return null;
             }
 

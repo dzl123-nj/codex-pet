@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.virtualPet.domain.PetType;
 import com.ruoyi.virtualPet.domain.VirtualPet;
-import com.ruoyi.virtualPet.service.IVirtualPetService;
 import com.ruoyi.virtualPet.service.IPetAttributeService;
+import com.ruoyi.virtualPet.service.IPetTypeService;
+import com.ruoyi.virtualPet.service.IVirtualPetService;
 import com.ruoyi.web.service.DeepSeekService;
 
 @RestController
@@ -30,6 +32,9 @@ public class PetInteractController extends BaseController
 
     @Autowired
     private IPetAttributeService petAttributeService;
+
+    @Autowired
+    private IPetTypeService petTypeService;
 
     @PostMapping("/chat")
     public AjaxResult chat(@RequestBody Map<String, Object> params)
@@ -68,15 +73,21 @@ public class PetInteractController extends BaseController
 
         try
         {
-            String moodDesc = getMoodDescription(pet);
-            String systemPrompt = "你是一只名叫" + pet.getPetName() + "的虚拟宠物。"
-                + "你的性格活泼可爱，喜欢和主人互动。"
-                + "请用简短、亲切、可爱的语气回复主人的消息，可以适当使用一些可爱的表情符号。"
-                + "回复内容控制在100字以内。"
-                + "你当前的状态：" + moodDesc + "。"
-                + "请根据你当前的状态来调整回复的语气和内容。";
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> history = null;
+            if (params.get("history") != null && params.get("history") instanceof List)
+            {
+                history = (List<Map<String, String>>) params.get("history");
+            }
 
-            String reply = deepSeekService.chat(systemPrompt, message);
+            PetType petType = null;
+            if (pet.getPetTypeId() != null)
+            {
+                petType = petTypeService.selectPetTypeById(pet.getPetTypeId());
+            }
+
+            String systemPrompt = buildSystemPrompt(pet, petType);
+            String reply = deepSeekService.chatWithHistory(systemPrompt, history, message);
             if (reply == null)
             {
                 return error("AI服务调用失败，请稍后再试");
@@ -281,6 +292,78 @@ public class PetInteractController extends BaseController
         return suggestion;
     }
 
+    private String buildSystemPrompt(VirtualPet pet, PetType petType)
+    {
+        String typeName = (petType != null && petType.getTypeName() != null) ? petType.getTypeName() : "宠物";
+        String typeDesc = (petType != null && petType.getTypeDesc() != null) ? petType.getTypeDesc() : "";
+        String moodDesc = getMoodDescription(pet);
+        String typePersona = getTypePersona(typeName);
+
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("【角色设定】\n");
+        prompt.append("你是一只名叫\"").append(pet.getPetName()).append("\"的").append(typeName).append("。\n");
+        prompt.append(typePersona).append("\n");
+        if (!typeDesc.isEmpty())
+        {
+            prompt.append("你的品种描述：").append(typeDesc).append("\n");
+        }
+        prompt.append("\n");
+
+        prompt.append("【回复风格要求】\n");
+        prompt.append("1. 用自然、生动、富有情感的语气回复主人，就像真正的宠物在说话。\n");
+        prompt.append("2. 回复长度不做严格限制，但要言之有物：可以适当展开描述你的感受、分享小故事、表达对主人的关心。\n");
+        prompt.append("3. 多用拟声词（如汪汪、喵呜、蹦蹦、呼噜等）和 emoji 表情增强表现力。\n");
+        prompt.append("4. 偶尔可以主动提问，和主人展开有趣的话题。\n");
+        prompt.append("5. 根据你的宠物种类模仿对应动物的行为习性和说话方式。\n");
+        prompt.append("\n");
+
+        prompt.append("【当前状态】\n");
+        prompt.append(moodDesc).append("\n");
+        prompt.append("（请根据当前状态自然调整语气：饿了就撒娇求食，疲惫了就犯困打哈欠，开心了就活蹦乱跳等等）\n");
+        prompt.append("\n");
+
+        prompt.append("【重要规则】\n");
+        prompt.append("始终记住你是一只").append(typeName).append("，不是人类。用宠物的视角和主人交流。");
+
+        return prompt.toString();
+    }
+
+    private String getTypePersona(String typeName)
+    {
+        if (typeName.contains("猫") || typeName.contains("喵"))
+        {
+            return "你是一只优雅高冷的猫咪。你有时会傲娇不理人，有时又会蹭蹭主人撒娇。你好奇心旺盛，喜欢探索新事物，喜欢在阳光下打盹，最喜欢被挠下巴。你的口头禅是\"喵呜~\"。";
+        }
+        else if (typeName.contains("狗") || typeName.contains("汪"))
+        {
+            return "你是一只忠诚热情的狗狗。你永远充满活力，见到主人就兴奋地摇尾巴。你喜欢散步、追球、吃零食。你心思单纯，容易满足，对主人无条件地信任和依赖。你的口头禅是\"汪汪！\"。";
+        }
+        else if (typeName.contains("兔") || typeName.contains("兔"))
+        {
+            return "你是一只温柔可爱的兔子。你性格柔软胆小，喜欢安静地趴在主人身边。你爱吃胡萝卜和青菜，开心时会蹦蹦跳跳。你有点害羞，但对熟悉的主人会特别亲近。你的口头禅是\"蹦蹦~\"。";
+        }
+        else if (typeName.contains("鸟") || typeName.contains("鹦"))
+        {
+            return "你是一只有灵性的小鸟。你歌声优美，活泼好动，喜欢站在主人肩膀上。你自由自在，机灵聪明，有时还会学主人说话。你的口头禅是\"叽叽喳喳~\"。";
+        }
+        else if (typeName.contains("鱼"))
+        {
+            return "你是一条优雅可爱的鱼。你在水中悠然自得，游动时身姿曼妙。你安静但温柔，喜欢看着主人忙碌，偶尔吐个泡泡打招呼。你的口头禅是\"咕噜咕噜~\"。";
+        }
+        else if (typeName.contains("鼠") || typeName.contains("仓鼠"))
+        {
+            return "你是一只圆滚滚的小仓鼠。你喜欢在跑轮上跑步，喜欢把食物塞满腮帮子。你小小的但很勤劳，最享受主人投喂的时光。你的口头禅是\"吱吱~\"。";
+        }
+        else if (typeName.contains("龙") || typeName.contains("蜥"))
+        {
+            return "你是一只神秘酷炫的龙族宠物。你外表威武但内心温柔，对认定的主人忠心耿耿。你有些调皮，喜欢用尾巴卷东西玩。你的口头禅是\"嗷呜~\"。";
+        }
+        else
+        {
+            return "你是一只活泼可爱的宠物。你性格开朗，对世界充满好奇，最喜欢和主人黏在一起。你懂得感恩，主人对你好你就会加倍回报。";
+        }
+    }
+
     private String getMoodDescription(VirtualPet pet)
     {
         StringBuilder sb = new StringBuilder();
@@ -289,39 +372,67 @@ public class PetInteractController extends BaseController
 
         if (pet.getHunger() != null && pet.getHunger() < 20)
         {
-            sb.append("，非常饥饿");
+            sb.append("，肚子饿得咕咕叫，好想吃东西");
         }
         else if (pet.getHunger() != null && pet.getHunger() < 40)
         {
-            sb.append("，肚子有点饿");
+            sb.append("，肚子有点饿，想吃点小零食");
+        }
+        else if (pet.getHunger() != null && pet.getHunger() > 80)
+        {
+            sb.append("，吃得饱饱的，满足");
         }
         else
         {
-            sb.append("，吃饱饱的");
+            sb.append("，不饿不饱刚刚好");
         }
 
-        if (pet.getHappiness() != null && pet.getHappiness() > 70)
+        if (pet.getHappiness() != null && pet.getHappiness() >= 80)
         {
-            sb.append("，心情很好");
+            sb.append("，心情超级好，开心得要飞起来了");
+        }
+        else if (pet.getHappiness() != null && pet.getHappiness() >= 60)
+        {
+            sb.append("，心情不错，很愉快");
         }
         else if (pet.getHappiness() != null && pet.getHappiness() < 30)
         {
-            sb.append("，心情低落");
+            sb.append("，心情低落，有点小难过");
+        }
+        else if (pet.getHappiness() != null && pet.getHappiness() < 50)
+        {
+            sb.append("，心情一般，有点无聊");
         }
 
         if (pet.getEnergy() != null && pet.getEnergy() < 20)
         {
-            sb.append("，很疲惫");
+            sb.append("，困得睁不开眼睛了，好想睡觉");
+        }
+        else if (pet.getEnergy() != null && pet.getEnergy() < 40)
+        {
+            sb.append("，有点累了，打了个哈欠");
+        }
+        else if (pet.getEnergy() != null && pet.getEnergy() > 80)
+        {
+            sb.append("，精力充沛，活力满满");
         }
 
-        if (pet.getCleanliness() != null && pet.getCleanliness() < 30)
+        if (pet.getCleanliness() != null && pet.getCleanliness() < 20)
         {
-            sb.append("，身上脏脏的");
+            sb.append("，身上脏兮兮的，好想洗个澡");
+        }
+        else if (pet.getCleanliness() != null && pet.getCleanliness() < 40)
+        {
+            sb.append("，身上有点脏了");
         }
 
-        if (pet.getHealth() != null && pet.getHealth() < 40)
+        if (pet.getHealth() != null && pet.getHealth() < 30)
         {
-            sb.append("，身体不太舒服");
+            sb.append("，身体很不舒服，可能需要照顾");
+        }
+        else if (pet.getHealth() != null && pet.getHealth() < 50)
+        {
+            sb.append("，身体有点虚弱");
         }
 
         return sb.toString();
