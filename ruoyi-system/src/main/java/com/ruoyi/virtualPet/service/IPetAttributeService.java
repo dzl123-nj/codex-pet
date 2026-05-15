@@ -18,6 +18,8 @@ public interface IPetAttributeService
 
     Map<String, Object> play(VirtualPet pet);
 
+    Map<String, Object> play(VirtualPet pet, long customExp);
+
     Map<String, Object> chatReward(VirtualPet pet);
 
     Map<String, Object> useItem(VirtualPet pet, PetItem item);

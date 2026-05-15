@@ -357,6 +357,12 @@ public class PetAttributeServiceImpl implements IPetAttributeService
     @Override
     public Map<String, Object> play(VirtualPet pet)
     {
+        return play(pet, PLAY_EXP);
+    }
+
+    @Override
+    public Map<String, Object> play(VirtualPet pet, long customExp)
+    {
         Map<String, Object> result = new HashMap<>();
         if (pet.getStatus() == 3L)
         {
@@ -377,6 +383,8 @@ public class PetAttributeServiceImpl implements IPetAttributeService
             return result;
         }
 
+        long expToAdd = customExp > 0 ? customExp : PLAY_EXP;
+
         long oldHunger = pet.getHunger() != null ? pet.getHunger() : 50;
         long oldHappiness = pet.getHappiness() != null ? pet.getHappiness() : 50;
         long oldEnergy = pet.getEnergy() != null ? pet.getEnergy() : 50;
@@ -389,7 +397,7 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         pet.setEnergy(clamp(oldEnergy - PLAY_ENERGY_COST));
         pet.setHunger(clamp(oldHunger - PLAY_HUNGER_COST));
         pet.setCleanliness(clamp(oldCleanliness - PLAY_CLEAN_COST));
-        pet.setExperience(oldExp + PLAY_EXP);
+        pet.setExperience(oldExp + expToAdd);
 
         recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "玩耍");
         recordChange(pet, "energy", oldEnergy, pet.getEnergy(), "玩耍");
@@ -412,7 +420,7 @@ public class PetAttributeServiceImpl implements IPetAttributeService
 
         result.put("success", true);
         result.put("message", msg);
-        result.put("changes", buildChanges(pet, oldHunger, oldHappiness, oldEnergy, oldCleanliness, oldHealth, PLAY_EXP, oldLevel));
+        result.put("changes", buildChanges(pet, oldHunger, oldHappiness, oldEnergy, oldCleanliness, oldHealth, expToAdd, oldLevel));
         result.put("petData", pet);
         return result;
     }

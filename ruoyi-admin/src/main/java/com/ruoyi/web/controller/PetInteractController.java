@@ -186,7 +186,16 @@ public class PetInteractController extends BaseController
         }
 
         petAttributeService.applyTimeDecay(pet);
-        Map<String, Object> result = petAttributeService.play(pet);
+        Map<String, Object> result;
+        if (params.get("score") != null)
+        {
+            long score = Long.valueOf(params.get("score").toString());
+            result = petAttributeService.play(pet, score);
+        }
+        else
+        {
+            result = petAttributeService.play(pet);
+        }
         return success(result);
     }
 
