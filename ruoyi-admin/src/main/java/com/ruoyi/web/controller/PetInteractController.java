@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.virtualPet.domain.PetItem;
 import com.ruoyi.virtualPet.domain.PetType;
 import com.ruoyi.virtualPet.domain.VirtualPet;
 import com.ruoyi.virtualPet.service.IPetAttributeService;
+import com.ruoyi.virtualPet.service.IPetItemService;
 import com.ruoyi.virtualPet.service.IPetTypeService;
 import com.ruoyi.virtualPet.service.IVirtualPetService;
 import com.ruoyi.web.service.DeepSeekService;
@@ -35,6 +37,9 @@ public class PetInteractController extends BaseController
 
     @Autowired
     private IPetTypeService petTypeService;
+
+    @Autowired
+    private IPetItemService petItemService;
 
     @PostMapping("/chat")
     public AjaxResult chat(@RequestBody Map<String, Object> params)
@@ -182,6 +187,29 @@ public class PetInteractController extends BaseController
 
         petAttributeService.applyTimeDecay(pet);
         Map<String, Object> result = petAttributeService.play(pet);
+        return success(result);
+    }
+
+    @PostMapping("/useItem")
+    public AjaxResult useItem(@RequestBody Map<String, Object> params)
+    {
+        Long petId = Long.valueOf(params.get("petId").toString());
+        Long itemId = Long.valueOf(params.get("itemId").toString());
+
+        VirtualPet pet = virtualPetService.selectVirtualPetById(petId);
+        if (pet == null)
+        {
+            return error("宠物不存在");
+        }
+
+        PetItem item = petItemService.selectPetItemById(itemId);
+        if (item == null)
+        {
+            return error("道具不存在");
+        }
+
+        petAttributeService.applyTimeDecay(pet);
+        Map<String, Object> result = petAttributeService.useItem(pet, item);
         return success(result);
     }
 

@@ -70,7 +70,8 @@ spring:
   devtools:
     restart:
       # 热部署开关
-      enabled: true
+      enabled: false
+      additional-paths: ../ruoyi-system/target/classes
   # redis 配置
   redis:
     # 地址

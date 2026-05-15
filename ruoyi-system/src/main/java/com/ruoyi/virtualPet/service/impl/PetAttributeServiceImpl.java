@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ruoyi.virtualPet.domain.PetAttributeRecord;
+import com.ruoyi.virtualPet.domain.PetItem;
 import com.ruoyi.virtualPet.domain.VirtualPet;
 import com.ruoyi.virtualPet.mapper.VirtualPetMapper;
+import com.ruoyi.virtualPet.service.IPetAttributeRecordService;
 import com.ruoyi.virtualPet.service.IPetAttributeService;
 
 @Service
@@ -49,6 +52,9 @@ public class PetAttributeServiceImpl implements IPetAttributeService
 
     @Autowired
     private VirtualPetMapper virtualPetMapper;
+
+    @Autowired
+    private IPetAttributeRecordService petAttributeRecordService;
 
     @Override
     public void applyTimeDecay(VirtualPet pet)
@@ -121,6 +127,12 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         }
         pet.setHealth(clamp(oldHealth - healthDecay));
 
+        recordChange(pet, "hunger", oldHunger, pet.getHunger(), "自然衰减");
+        recordChange(pet, "energy", oldEnergy, pet.getEnergy(), isSleeping ? "睡眠恢复" : "自然衰减");
+        recordChange(pet, "cleanliness", oldCleanliness, pet.getCleanliness(), "自然衰减");
+        recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "自然衰减");
+        recordChange(pet, "health", oldHealth, pet.getHealth(), "自然衰减");
+
         recalculateStatus(pet);
 
         if (isSleeping && pet.getEnergy() >= MAX_ATTR)
@@ -164,9 +176,10 @@ public class PetAttributeServiceImpl implements IPetAttributeService
 
         pet.setHunger(clamp(oldHunger + FEED_HUNGER_ADD));
         pet.setHappiness(clamp(oldHappiness + FEED_HAPPINESS_ADD));
-        pet.setExperience(oldExp + FEED_EXP);
 
-        checkLevelUp(pet);
+        recordChange(pet, "hunger", oldHunger, pet.getHunger(), "喂食");
+        recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "喂食");
+
         recalculateStatus(pet);
         savePet(pet);
 
@@ -188,7 +201,7 @@ public class PetAttributeServiceImpl implements IPetAttributeService
 
         result.put("success", true);
         result.put("message", msg);
-        result.put("changes", buildChanges(pet, oldHunger, oldHappiness, oldEnergy, oldCleanliness, oldHealth, FEED_EXP, oldLevel));
+        result.put("changes", buildChanges(pet, oldHunger, oldHappiness, oldEnergy, oldCleanliness, oldHealth, 0L, oldLevel));
         result.put("petData", pet);
         return result;
     }
@@ -221,9 +234,11 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         pet.setCleanliness(clamp(oldCleanliness + CLEAN_ADD));
         pet.setHealth(clamp(oldHealth + CLEAN_HEALTH_ADD));
         pet.setHappiness(clamp(oldHappiness + 5));
-        pet.setExperience(oldExp + CLEAN_EXP);
 
-        checkLevelUp(pet);
+        recordChange(pet, "cleanliness", oldCleanliness, pet.getCleanliness(), "清洁");
+        recordChange(pet, "health", oldHealth, pet.getHealth(), "清洁");
+        recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "清洁");
+
         recalculateStatus(pet);
         savePet(pet);
 
@@ -239,7 +254,7 @@ public class PetAttributeServiceImpl implements IPetAttributeService
 
         result.put("success", true);
         result.put("message", msg);
-        result.put("changes", buildChanges(pet, oldHunger, oldHappiness, oldEnergy, oldCleanliness, oldHealth, CLEAN_EXP, oldLevel));
+        result.put("changes", buildChanges(pet, oldHunger, oldHappiness, oldEnergy, oldCleanliness, oldHealth, 0L, oldLevel));
         result.put("petData", pet);
         return result;
     }
@@ -273,6 +288,9 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         pet.setHappiness(clamp(oldHappiness + SLEEP_HAPPINESS_ADD));
         pet.setExperience(oldExp + SLEEP_EXP);
         pet.setStatus(0L);
+
+        recordChange(pet, "energy", oldEnergy, pet.getEnergy(), "睡眠");
+        recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "睡眠");
 
         checkLevelUp(pet);
         savePet(pet);
@@ -373,6 +391,11 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         pet.setCleanliness(clamp(oldCleanliness - PLAY_CLEAN_COST));
         pet.setExperience(oldExp + PLAY_EXP);
 
+        recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "玩耍");
+        recordChange(pet, "energy", oldEnergy, pet.getEnergy(), "玩耍");
+        recordChange(pet, "hunger", oldHunger, pet.getHunger(), "玩耍");
+        recordChange(pet, "cleanliness", oldCleanliness, pet.getCleanliness(), "玩耍");
+
         checkLevelUp(pet);
         recalculateStatus(pet);
         savePet(pet);
@@ -400,6 +423,7 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         Map<String, Object> result = new HashMap<>();
         long oldExp = pet.getExperience() != null ? pet.getExperience() : 0;
         long oldHappiness = pet.getHappiness() != null ? pet.getHappiness() : 50;
+        long oldEnergy = pet.getEnergy() != null ? pet.getEnergy() : 50;
 
         pet.setExperience(oldExp + CHAT_EXP);
         pet.setHappiness(clamp(oldHappiness + CHAT_HAPPINESS_ADD));
@@ -409,9 +433,79 @@ public class PetAttributeServiceImpl implements IPetAttributeService
             pet.setEnergy(clamp((pet.getEnergy() != null ? pet.getEnergy() : 50) - CHAT_ENERGY_COST));
         }
 
+        recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "聊天");
+        recordChange(pet, "energy", oldEnergy, pet.getEnergy(), "聊天");
+
         checkLevelUp(pet);
         savePet(pet);
 
+        result.put("petData", pet);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> useItem(VirtualPet pet, PetItem item)
+    {
+        Map<String, Object> result = new HashMap<>();
+        if (pet.getStatus() == 3L)
+        {
+            result.put("success", false);
+            result.put("message", "宠物已经不在了，无法使用道具... 😢");
+            return result;
+        }
+        if (pet.getStatus() == 0L)
+        {
+            result.put("success", false);
+            result.put("message", "宠物正在睡觉，等它醒来再用道具吧~ 😴");
+            return result;
+        }
+
+        long oldHunger = pet.getHunger() != null ? pet.getHunger() : 50;
+        long oldHappiness = pet.getHappiness() != null ? pet.getHappiness() : 50;
+        long oldEnergy = pet.getEnergy() != null ? pet.getEnergy() : 50;
+        long oldCleanliness = pet.getCleanliness() != null ? pet.getCleanliness() : 50;
+        long oldHealth = pet.getHealth() != null ? pet.getHealth() : 50;
+        long oldExp = pet.getExperience() != null ? pet.getExperience() : 0;
+        long oldLevel = pet.getLevel() != null ? pet.getLevel() : 1;
+
+        if (item.getHungerChange() != null)
+        {
+            pet.setHunger(clamp(oldHunger + item.getHungerChange()));
+            recordChange(pet, "hunger", oldHunger, pet.getHunger(), "使用道具-" + item.getItemName());
+        }
+        if (item.getHappinessChange() != null)
+        {
+            pet.setHappiness(clamp(oldHappiness + item.getHappinessChange()));
+            recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "使用道具-" + item.getItemName());
+        }
+        if (item.getEnergyChange() != null)
+        {
+            pet.setEnergy(clamp(oldEnergy + item.getEnergyChange()));
+            recordChange(pet, "energy", oldEnergy, pet.getEnergy(), "使用道具-" + item.getItemName());
+        }
+        if (item.getCleanlinessChange() != null)
+        {
+            pet.setCleanliness(clamp(oldCleanliness + item.getCleanlinessChange()));
+            recordChange(pet, "cleanliness", oldCleanliness, pet.getCleanliness(), "使用道具-" + item.getItemName());
+        }
+        if (item.getHealthChange() != null)
+        {
+            pet.setHealth(clamp(oldHealth + item.getHealthChange()));
+            recordChange(pet, "health", oldHealth, pet.getHealth(), "使用道具-" + item.getItemName());
+        }
+        if (item.getExperienceReward() != null)
+        {
+            pet.setExperience(oldExp + item.getExperienceReward());
+        }
+
+        long expGained = item.getExperienceReward() != null ? item.getExperienceReward() : 0;
+        checkLevelUp(pet);
+        recalculateStatus(pet);
+        savePet(pet);
+
+        result.put("success", true);
+        result.put("message", "给" + pet.getPetName() + "使用了" + item.getItemName() + "！效果拔群~ ✨");
+        result.put("changes", buildChanges(pet, oldHunger, oldHappiness, oldEnergy, oldCleanliness, oldHealth, expGained, oldLevel));
         result.put("petData", pet);
         return result;
     }
@@ -488,6 +582,23 @@ public class PetAttributeServiceImpl implements IPetAttributeService
     private long clamp(long value)
     {
         return Math.max(MIN_ATTR, Math.min(MAX_ATTR, value));
+    }
+
+    private void recordChange(VirtualPet pet, String attributeType, long oldValue, long newValue, String reason)
+    {
+        if (oldValue == newValue)
+        {
+            return;
+        }
+        PetAttributeRecord record = new PetAttributeRecord();
+        record.setPetId(pet.getId());
+        record.setAttributeType(attributeType);
+        record.setOldValue(oldValue);
+        record.setNewValue(newValue);
+        record.setChangeAmount(newValue - oldValue);
+        record.setChangeReason(reason);
+        record.setChangeTime(new Date());
+        petAttributeRecordService.insertPetAttributeRecord(record);
     }
 
     private void savePet(VirtualPet pet)
