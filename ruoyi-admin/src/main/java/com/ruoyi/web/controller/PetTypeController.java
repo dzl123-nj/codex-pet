@@ -47,6 +47,16 @@ public class PetTypeController extends BaseController
     }
 
     /**
+     * 获取所有宠物类型（下拉列表用，无需权限）
+     */
+    @GetMapping("/listAll")
+    public AjaxResult listAll()
+    {
+        List<PetType> list = petTypeService.selectPetTypeList(new PetType());
+        return success(list);
+    }
+
+    /**
      * 导出宠物类型列表
      */
     @PreAuthorize("@ss.hasPermi('pet:type:export')")
@@ -63,7 +73,7 @@ public class PetTypeController extends BaseController
      * 获取宠物类型详细信息
      */
     @PreAuthorize("@ss.hasPermi('pet:type:query')")
-    @GetMapping(value = "/{id}")
+    @GetMapping(value = "/{id:\\d+}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
         return success(petTypeService.selectPetTypeById(id));

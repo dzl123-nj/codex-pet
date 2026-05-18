@@ -1,6 +1,7 @@
 package com.ruoyi.web.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.player.domain.ItemUsageRecord;
+import com.ruoyi.player.domain.UserItemInventory;
+import com.ruoyi.player.service.IItemUsageRecordService;
+import com.ruoyi.player.service.IUserItemInventoryService;
 import com.ruoyi.virtualPet.domain.PetItem;
 import com.ruoyi.virtualPet.domain.PetType;
 import com.ruoyi.virtualPet.domain.VirtualPet;
@@ -40,6 +46,12 @@ public class PetInteractController extends BaseController
 
     @Autowired
     private IPetItemService petItemService;
+
+    @Autowired
+    private IUserItemInventoryService userItemInventoryService;
+
+    @Autowired
+    private IItemUsageRecordService itemUsageRecordService;
 
     @PostMapping("/chat")
     public AjaxResult chat(@RequestBody Map<String, Object> params)
@@ -216,6 +228,30 @@ public class PetInteractController extends BaseController
         {
             return error("道具不存在");
         }
+
+        Long userId = SecurityUtils.getUserId();
+
+        UserItemInventory query = new UserItemInventory();
+        query.setUserId(userId);
+        query.setItemId(itemId);
+        List<UserItemInventory> inventoryList = userItemInventoryService.selectUserItemInventoryList(query);
+        if (inventoryList.isEmpty() || inventoryList.get(0).getQuantity() == null
+            || inventoryList.get(0).getQuantity() <= 0)
+        {
+            return error("道具不足，请先去获取更多道具吧~");
+        }
+
+        UserItemInventory inventory = inventoryList.get(0);
+        inventory.setQuantity(inventory.getQuantity() - 1);
+        userItemInventoryService.updateUserItemInventory(inventory);
+
+        ItemUsageRecord record = new ItemUsageRecord();
+        record.setUserId(userId);
+        record.setPetId(petId);
+        record.setItemId(itemId);
+        record.setUsageQuantity(1L);
+        record.setUsageTime(new Date());
+        itemUsageRecordService.insertItemUsageRecord(record);
 
         petAttributeService.applyTimeDecay(pet);
         Map<String, Object> result = petAttributeService.useItem(pet, item);

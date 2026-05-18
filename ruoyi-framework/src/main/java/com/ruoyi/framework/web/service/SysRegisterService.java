@@ -16,6 +16,8 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.framework.manager.AsyncManager;
 import com.ruoyi.framework.manager.factory.AsyncFactory;
+import com.ruoyi.player.domain.User;
+import com.ruoyi.player.service.IUserService;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysUserService;
 
@@ -29,6 +31,9 @@ public class SysRegisterService
 {
     @Autowired
     private ISysUserService userService;
+
+    @Autowired
+    private IUserService pUserService;
 
     @Autowired
     private ISysConfigService configService;
@@ -86,6 +91,15 @@ public class SysRegisterService
             }
             else
             {
+                User pUser = new User();
+                pUser.setUsername(username);
+                pUser.setPassword(SecurityUtils.encryptPassword(password));
+                pUser.setNickname(username);
+                pUser.setRegisterTime(DateUtils.getNowDate());
+                pUser.setStatus(1L);
+                pUser.setDeleted(0L);
+                pUserService.insertUser(pUser);
+
                 AsyncManager.me().execute(AsyncFactory.recordLogininfor(username, Constants.REGISTER, MessageUtils.message("user.register.success")));
             }
         }

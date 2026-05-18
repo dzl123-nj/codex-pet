@@ -93,4 +93,16 @@ public class UserItemInventoryServiceImpl implements IUserItemInventoryService
     {
         return userItemInventoryMapper.deleteUserItemInventoryById(id);
     }
+
+    /**
+     * 查询用户仓库（关联道具详情）
+     * 
+     * @param userId 用户ID
+     * @return 用户道具库存集合（含道具详情）
+     */
+    @Override
+    public List<UserItemInventory> selectMyWarehouse(Long userId)
+    {
+        return userItemInventoryMapper.selectMyWarehouse(userId);
+    }
 }

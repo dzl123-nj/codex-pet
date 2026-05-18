@@ -42,7 +42,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into pet_item
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="itemName != null and itemName != ''">item_name,</if>
-            <if test="itemType != null and itemType != ''">item_type,</if>
+            item_type,
             <if test="itemDesc != null">item_desc,</if>
             <if test="hungerChange != null">hunger_change,</if>
             <if test="happinessChange != null">happiness_change,</if>
@@ -57,7 +57,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="itemName != null and itemName != ''">#{itemName},</if>
-            <if test="itemType != null and itemType != ''">#{itemType},</if>
+            #{itemType},
             <if test="itemDesc != null">#{itemDesc},</if>
             <if test="hungerChange != null">#{hungerChange},</if>
             <if test="happinessChange != null">#{happinessChange},</if>

@@ -58,4 +58,12 @@ public interface IUserItemInventoryService
      * @return 结果
      */
     public int deleteUserItemInventoryById(Long id);
+
+    /**
+     * 查询用户仓库（关联道具详情）
+     * 
+     * @param userId 用户ID
+     * @return 用户道具库存集合（含道具详情）
+     */
+    public List<UserItemInventory> selectMyWarehouse(Long userId);
 }

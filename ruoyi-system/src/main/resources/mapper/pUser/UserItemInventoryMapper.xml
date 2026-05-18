@@ -70,4 +70,34 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <resultMap type="UserItemInventory" id="UserItemInventoryWithItemResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="itemId"    column="item_id"    />
+        <result property="quantity"    column="quantity"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="itemName"    column="item_name"    />
+        <result property="itemType"    column="item_type"    />
+        <result property="itemDesc"    column="item_desc"    />
+        <result property="hungerChange"    column="hunger_change"    />
+        <result property="happinessChange"    column="happiness_change"    />
+        <result property="energyChange"    column="energy_change"    />
+        <result property="cleanlinessChange"    column="cleanliness_change"    />
+        <result property="healthChange"    column="health_change"    />
+        <result property="experienceReward"    column="experience_reward"    />
+        <result property="price"    column="price"    />
+    </resultMap>
+
+    <select id="selectMyWarehouse" parameterType="Long" resultMap="UserItemInventoryWithItemResult">
+        select ui.id, ui.user_id, ui.item_id, ui.quantity, ui.create_time, ui.update_time,
+               pi.item_name, pi.item_type, pi.item_desc,
+               pi.hunger_change, pi.happiness_change, pi.energy_change,
+               pi.cleanliness_change, pi.health_change, pi.experience_reward, pi.price
+        from user_item_inventory ui
+        left join pet_item pi on ui.item_id = pi.id
+        where ui.user_id = #{userId} and ui.quantity > 0
+        order by pi.item_type, pi.item_name
+    </select>
 </mapper>

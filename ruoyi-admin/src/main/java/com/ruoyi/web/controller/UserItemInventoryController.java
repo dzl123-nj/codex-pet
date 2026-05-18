@@ -16,6 +16,7 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.player.domain.UserItemInventory;
 import com.ruoyi.player.service.IUserItemInventoryService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
@@ -100,5 +101,16 @@ public class UserItemInventoryController extends BaseController
     public AjaxResult remove(@PathVariable Long[] ids)
     {
         return toAjax(userItemInventoryService.deleteUserItemInventoryByIds(ids));
+    }
+
+    /**
+     * 查询我的仓库（当前用户的道具库存，含道具详情）
+     */
+    @GetMapping("/myWarehouse")
+    public AjaxResult myWarehouse()
+    {
+        Long userId = SecurityUtils.getUserId();
+        List<UserItemInventory> list = userItemInventoryService.selectMyWarehouse(userId);
+        return success(list);
     }
 }

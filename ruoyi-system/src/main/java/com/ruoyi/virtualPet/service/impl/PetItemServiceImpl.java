@@ -54,6 +54,10 @@ public class PetItemServiceImpl implements IPetItemService
     public int insertPetItem(PetItem petItem)
     {
         petItem.setCreateTime(DateUtils.getNowDate());
+        if (petItem.getItemType() == null || petItem.getItemType().isEmpty())
+        {
+            petItem.setItemType("其他");
+        }
         return petItemMapper.insertPetItem(petItem);
     }
 
