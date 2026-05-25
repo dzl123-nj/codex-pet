@@ -17,6 +17,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.virtualPet.domain.VirtualPet;
+import com.ruoyi.virtualPet.service.IPetAttributeService;
 import com.ruoyi.virtualPet.service.IVirtualPetService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -34,6 +35,9 @@ public class VirtualPetController extends BaseController
     @Autowired
     private IVirtualPetService virtualPetService;
 
+    @Autowired
+    private IPetAttributeService petAttributeService;
+
     /**
      * 查询虚拟宠物列表
      */
@@ -43,6 +47,13 @@ public class VirtualPetController extends BaseController
     {
         startPage();
         List<VirtualPet> list = virtualPetService.selectVirtualPetList(virtualPet);
+        for (VirtualPet pet : list)
+        {
+            if (petAttributeService.applyTimeDecay(pet))
+            {
+                virtualPetService.updateVirtualPet(pet);
+            }
+        }
         return getDataTable(list);
     }
 
@@ -66,7 +77,12 @@ public class VirtualPetController extends BaseController
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(virtualPetService.selectVirtualPetById(id));
+        VirtualPet pet = virtualPetService.selectVirtualPetById(id);
+        if (pet != null && petAttributeService.applyTimeDecay(pet))
+        {
+            virtualPetService.updateVirtualPet(pet);
+        }
+        return success(pet);
     }
 
     /**

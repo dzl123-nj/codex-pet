@@ -6,7 +6,7 @@ import com.ruoyi.virtualPet.domain.VirtualPet;
 
 public interface IPetAttributeService
 {
-    void applyTimeDecay(VirtualPet pet);
+    boolean applyTimeDecay(VirtualPet pet);
 
     Map<String, Object> feed(VirtualPet pet);
 

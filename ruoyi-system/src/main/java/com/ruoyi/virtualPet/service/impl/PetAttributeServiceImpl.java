@@ -3,6 +3,7 @@ package com.ruoyi.virtualPet.service.impl;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.virtualPet.domain.PetAttributeRecord;
@@ -22,6 +23,7 @@ public class PetAttributeServiceImpl implements IPetAttributeService
     private static final long ENERGY_DECAY_PER_HOUR = 3;
     private static final long CLEANLINESS_DECAY_PER_HOUR = 2;
     private static final long HAPPINESS_DECAY_PER_HOUR = 1;
+    private static final long HEALTH_DECAY_PER_HOUR = 1;
 
     private static final long HUNGER_LOW_THRESHOLD = 15;
     private static final long CLEANLINESS_LOW_THRESHOLD = 15;
@@ -57,21 +59,21 @@ public class PetAttributeServiceImpl implements IPetAttributeService
     private IPetAttributeRecordService petAttributeRecordService;
 
     @Override
-    public void applyTimeDecay(VirtualPet pet)
+    public boolean applyTimeDecay(VirtualPet pet)
     {
         if (pet.getStatus() == null || pet.getStatus() == 3L)
         {
-            return;
+            return false;
         }
 
         long now = System.currentTimeMillis();
         long lastUpdate = pet.getUpdateTime() != null ? pet.getUpdateTime().getTime() : now;
         long elapsedMs = now - lastUpdate;
-        long elapsedHours = elapsedMs / (1000L * 60 * 60);
+        double elapsedHours = elapsedMs / (1000.0 * 60 * 60);
 
-        if (elapsedHours <= 0)
+        if (elapsedMs < 60 * 1000)
         {
-            return;
+            return false;
         }
 
         if (elapsedHours > 72)
@@ -80,8 +82,9 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         }
 
         boolean isSleeping = pet.getStatus() != null && pet.getStatus() == 0L;
-        long energyDecay = isSleeping ? 0 : ENERGY_DECAY_PER_HOUR * elapsedHours;
-        long energyRecover = isSleeping ? (ENERGY_DECAY_PER_HOUR + 2) * elapsedHours : 0;
+        long energyDecay = isSleeping ? 0 : Math.round(ENERGY_DECAY_PER_HOUR * elapsedHours);
+        long energyRecover = isSleeping ? Math.round((ENERGY_DECAY_PER_HOUR + 2) * elapsedHours) : 0;
+        long healthRecover = isSleeping ? Math.round(HEALTH_DECAY_PER_HOUR * elapsedHours) : 0;
 
         long oldHunger = pet.getHunger() != null ? pet.getHunger() : 50;
         long oldEnergy = pet.getEnergy() != null ? pet.getEnergy() : 50;
@@ -89,15 +92,15 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         long oldHappiness = pet.getHappiness() != null ? pet.getHappiness() : 50;
         long oldHealth = pet.getHealth() != null ? pet.getHealth() : 50;
 
-        pet.setHunger(clamp(oldHunger - HUNGER_DECAY_PER_HOUR * elapsedHours));
+        pet.setHunger(clamp(oldHunger - Math.round(HUNGER_DECAY_PER_HOUR * elapsedHours)));
         pet.setEnergy(clamp(oldEnergy - energyDecay + energyRecover));
-        pet.setCleanliness(clamp(oldCleanliness - CLEANLINESS_DECAY_PER_HOUR * elapsedHours));
+        pet.setCleanliness(clamp(oldCleanliness - Math.round(CLEANLINESS_DECAY_PER_HOUR * elapsedHours)));
 
         long newHunger = pet.getHunger();
         long newEnergy = pet.getEnergy();
         long newCleanliness = pet.getCleanliness();
 
-        long happinessDecay = HAPPINESS_DECAY_PER_HOUR * elapsedHours;
+        double happinessDecay = HAPPINESS_DECAY_PER_HOUR * elapsedHours;
         if (newHunger <= HUNGER_LOW_THRESHOLD)
         {
             happinessDecay += elapsedHours;
@@ -110,9 +113,9 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         {
             happinessDecay += elapsedHours;
         }
-        pet.setHappiness(clamp(oldHappiness - happinessDecay));
+        pet.setHappiness(clamp(oldHappiness - Math.round(happinessDecay)));
 
-        long healthDecay = 0;
+        double healthDecay = isSleeping ? 0 : HEALTH_DECAY_PER_HOUR * elapsedHours;
         if (newHunger <= HUNGER_LOW_THRESHOLD)
         {
             healthDecay += 3 * elapsedHours;
@@ -125,13 +128,25 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         {
             healthDecay += elapsedHours;
         }
-        pet.setHealth(clamp(oldHealth - healthDecay));
+        if (pet.getStatus() != null && pet.getStatus() == 2L)
+        {
+            healthDecay += 3 * elapsedHours;
+        }
+        pet.setHealth(clamp(oldHealth - Math.round(healthDecay) + healthRecover));
 
-        recordChange(pet, "hunger", oldHunger, pet.getHunger(), "自然衰减");
-        recordChange(pet, "energy", oldEnergy, pet.getEnergy(), isSleeping ? "睡眠恢复" : "自然衰减");
-        recordChange(pet, "cleanliness", oldCleanliness, pet.getCleanliness(), "自然衰减");
-        recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "自然衰减");
-        recordChange(pet, "health", oldHealth, pet.getHealth(), "自然衰减");
+        boolean changed = pet.getHunger() != oldHunger || pet.getEnergy() != oldEnergy
+            || pet.getCleanliness() != oldCleanliness || pet.getHappiness() != oldHappiness
+            || pet.getHealth() != oldHealth;
+
+        if (changed)
+        {
+            boolean wasSick = pet.getStatus() != null && pet.getStatus() == 2L;
+            recordChange(pet, "hunger", oldHunger, pet.getHunger(), "自然衰减");
+            recordChange(pet, "energy", oldEnergy, pet.getEnergy(), isSleeping ? "睡眠恢复" : "自然衰减");
+            recordChange(pet, "cleanliness", oldCleanliness, pet.getCleanliness(), "自然衰减");
+            recordChange(pet, "happiness", oldHappiness, pet.getHappiness(), "自然衰减");
+            recordChange(pet, "health", oldHealth, pet.getHealth(), wasSick ? "生病衰减" : "自然衰减");
+        }
 
         recalculateStatus(pet);
 
@@ -139,6 +154,8 @@ public class PetAttributeServiceImpl implements IPetAttributeService
         {
             pet.setStatus(1L);
         }
+
+        return changed;
     }
 
     @Override
@@ -538,21 +555,70 @@ public class PetAttributeServiceImpl implements IPetAttributeService
             return;
         }
 
-        boolean isSick = false;
-        if (pet.getHealth() != null && pet.getHealth() < HEALTH_SICK_THRESHOLD)
-        {
-            isSick = true;
-        }
         if (pet.getHunger() != null && pet.getHunger() <= HUNGER_LOW_THRESHOLD)
         {
-            isSick = true;
+            pet.setStatus(2L);
+            return;
         }
         if (pet.getCleanliness() != null && pet.getCleanliness() <= CLEANLINESS_LOW_THRESHOLD)
         {
-            isSick = true;
+            pet.setStatus(2L);
+            return;
         }
 
-        pet.setStatus(isSick ? 2L : 1L);
+        long health = pet.getHealth() != null ? pet.getHealth() : 50;
+        long hunger = pet.getHunger() != null ? pet.getHunger() : 50;
+        long cleanliness = pet.getCleanliness() != null ? pet.getCleanliness() : 50;
+        long energy = pet.getEnergy() != null ? pet.getEnergy() : 50;
+
+        double sickChance = 0;
+        if (health < 40)
+        {
+            sickChance = 0.7 + (40 - health) * 0.01;
+        }
+        else if (health < 60)
+        {
+            sickChance = 0.15 + (60 - health) * 0.0125;
+        }
+        else if (health < 80)
+        {
+            sickChance = (80 - health) * 0.005;
+        }
+
+        if (hunger < 30)
+        {
+            sickChance += 0.1;
+        }
+        if (cleanliness < 30)
+        {
+            sickChance += 0.1;
+        }
+        if (energy < 15)
+        {
+            sickChance += 0.1;
+        }
+
+        sickChance = Math.min(1.0, sickChance);
+
+        long timeSeed = System.currentTimeMillis() / (30 * 60 * 1000);
+        Random random = new Random(pet.getId() * 31 + timeSeed);
+        double roll = random.nextDouble();
+
+        boolean wasSick = pet.getStatus() != null && pet.getStatus() == 2L;
+        if (wasSick)
+        {
+            if (roll >= sickChance * 1.5)
+            {
+                pet.setStatus(1L);
+            }
+        }
+        else
+        {
+            if (roll < sickChance)
+            {
+                pet.setStatus(2L);
+            }
+        }
     }
 
     @Override
