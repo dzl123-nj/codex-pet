@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.virtualPet.mapper.PetActionMapper">
+
+    <resultMap type="PetAction" id="PetActionResult">
+        <result property="id" column="id" />
+        <result property="actionCode" column="action_code" />
+        <result property="actionName" column="action_name" />
+        <result property="triggerType" column="trigger_type" />
+        <result property="duration" column="duration" />
+        <result property="cooldown" column="cooldown" />
+        <result property="hungerChange" column="hunger_change" />
+        <result property="happinessChange" column="happiness_change" />
+        <result property="energyChange" column="energy_change" />
+        <result property="cleanlinessChange" column="cleanliness_change" />
+        <result property="healthChange" column="health_change" />
+        <result property="intimacyChange" column="intimacy_change" />
+        <result property="experienceReward" column="experience_reward" />
+        <result property="bubbleText" column="bubble_text" />
+        <result property="animationName" column="animation_name" />
+        <result property="sortOrder" column="sort_order" />
+        <result property="enabled" column="enabled" />
+        <result property="deleted" column="deleted" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectPetActionVo">
+        select id, action_code, action_name, trigger_type, duration, cooldown, hunger_change, happiness_change, energy_change, cleanliness_change, health_change, intimacy_change, experience_reward, bubble_text, animation_name, sort_order, enabled, deleted, create_time, update_time from pet_action
+    </sql>
+
+    <select id="selectPetActionList" parameterType="PetAction" resultMap="PetActionResult">
+        <include refid="selectPetActionVo"/>
+        <where>
+            <if test="actionCode != null and actionCode != ''"> and action_code like concat('%', #{actionCode}, '%')</if>
+            <if test="actionName != null and actionName != ''"> and action_name like concat('%', #{actionName}, '%')</if>
+            <if test="triggerType != null and triggerType != ''"> and trigger_type = #{triggerType}</if>
+            <if test="enabled != null"> and enabled = #{enabled}</if>
+            <if test="deleted != null"> and deleted = #{deleted}</if>
+        </where>
+        order by sort_order asc, id asc
+    </select>
+
+    <select id="selectEnabledPetActionList" resultMap="PetActionResult">
+        <include refid="selectPetActionVo"/>
+        where enabled = 1 and deleted = 0
+        order by sort_order asc, id asc
+    </select>
+
+    <select id="selectPetActionById" parameterType="Long" resultMap="PetActionResult">
+        <include refid="selectPetActionVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectPetActionByCode" parameterType="String" resultMap="PetActionResult">
+        <include refid="selectPetActionVo"/>
+        where action_code = #{actionCode} and deleted = 0
+        limit 1
+    </select>
+
+    <insert id="insertPetAction" parameterType="PetAction" useGeneratedKeys="true" keyProperty="id">
+        insert into pet_action
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="actionCode != null and actionCode != ''">action_code,</if>
+            <if test="actionName != null and actionName != ''">action_name,</if>
+            <if test="triggerType != null and triggerType != ''">trigger_type,</if>
+            <if test="duration != null">duration,</if>
+            <if test="cooldown != null">cooldown,</if>
+            <if test="hungerChange != null">hunger_change,</if>
+            <if test="happinessChange != null">happiness_change,</if>
+            <if test="energyChange != null">energy_change,</if>
+            <if test="cleanlinessChange != null">cleanliness_change,</if>
+            <if test="healthChange != null">health_change,</if>
+            <if test="intimacyChange != null">intimacy_change,</if>
+            <if test="experienceReward != null">experience_reward,</if>
+            <if test="bubbleText != null">bubble_text,</if>
+            <if test="animationName != null">animation_name,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="enabled != null">enabled,</if>
+            <if test="deleted != null">deleted,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="actionCode != null and actionCode != ''">#{actionCode},</if>
+            <if test="actionName != null and actionName != ''">#{actionName},</if>
+            <if test="triggerType != null and triggerType != ''">#{triggerType},</if>
+            <if test="duration != null">#{duration},</if>
+            <if test="cooldown != null">#{cooldown},</if>
+            <if test="hungerChange != null">#{hungerChange},</if>
+            <if test="happinessChange != null">#{happinessChange},</if>
+            <if test="energyChange != null">#{energyChange},</if>
+            <if test="cleanlinessChange != null">#{cleanlinessChange},</if>
+            <if test="healthChange != null">#{healthChange},</if>
+            <if test="intimacyChange != null">#{intimacyChange},</if>
+            <if test="experienceReward != null">#{experienceReward},</if>
+            <if test="bubbleText != null">#{bubbleText},</if>
+            <if test="animationName != null">#{animationName},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="enabled != null">#{enabled},</if>
+            <if test="deleted != null">#{deleted},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updatePetAction" parameterType="PetAction">
+        update pet_action
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="actionCode != null and actionCode != ''">action_code = #{actionCode},</if>
+            <if test="actionName != null and actionName != ''">action_name = #{actionName},</if>
+            <if test="triggerType != null and triggerType != ''">trigger_type = #{triggerType},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="cooldown != null">cooldown = #{cooldown},</if>
+            <if test="hungerChange != null">hunger_change = #{hungerChange},</if>
+            <if test="happinessChange != null">happiness_change = #{happinessChange},</if>
+            <if test="energyChange != null">energy_change = #{energyChange},</if>
+            <if test="cleanlinessChange != null">cleanliness_change = #{cleanlinessChange},</if>
+            <if test="healthChange != null">health_change = #{healthChange},</if>
+            <if test="intimacyChange != null">intimacy_change = #{intimacyChange},</if>
+            <if test="experienceReward != null">experience_reward = #{experienceReward},</if>
+            <if test="bubbleText != null">bubble_text = #{bubbleText},</if>
+            <if test="animationName != null">animation_name = #{animationName},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            <if test="deleted != null">deleted = #{deleted},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePetActionById" parameterType="Long">
+        delete from pet_action where id = #{id}
+    </delete>
+
+    <delete id="deletePetActionByIds" parameterType="String">
+        delete from pet_action where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

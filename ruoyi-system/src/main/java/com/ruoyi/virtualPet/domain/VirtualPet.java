@@ -72,6 +72,32 @@ public class VirtualPet extends BaseEntity
     @Excel(name = "状态：0-休眠，1-活跃，2-生病，3-死亡")
     private Long status;
 
+    /** 亲密度：0-100 */
+    private Long intimacy;
+
+    /** 成长阶段：child/growing/adult */
+    private String growthStage;
+
+    /** 当前情绪状态 */
+    private String moodState;
+
+    /** 桌面宠物横坐标 */
+    private Long desktopX;
+
+    /** 桌面宠物纵坐标 */
+    private Long desktopY;
+
+    /** 是否显示桌面宠物：0-隐藏，1-显示 */
+    private Long desktopVisible;
+
+    /** 最后互动时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date lastInteractTime;
+
+    /** 最后属性衰减时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date lastDecayTime;
+
     /** 逻辑删除：0-未删除，1-已删除 */
     private Long deleted;
 
@@ -218,6 +244,86 @@ public class VirtualPet extends BaseEntity
         return status;
     }
 
+    public void setIntimacy(Long intimacy)
+    {
+        this.intimacy = intimacy;
+    }
+
+    public Long getIntimacy()
+    {
+        return intimacy;
+    }
+
+    public void setGrowthStage(String growthStage)
+    {
+        this.growthStage = growthStage;
+    }
+
+    public String getGrowthStage()
+    {
+        return growthStage;
+    }
+
+    public void setMoodState(String moodState)
+    {
+        this.moodState = moodState;
+    }
+
+    public String getMoodState()
+    {
+        return moodState;
+    }
+
+    public void setDesktopX(Long desktopX)
+    {
+        this.desktopX = desktopX;
+    }
+
+    public Long getDesktopX()
+    {
+        return desktopX;
+    }
+
+    public void setDesktopY(Long desktopY)
+    {
+        this.desktopY = desktopY;
+    }
+
+    public Long getDesktopY()
+    {
+        return desktopY;
+    }
+
+    public void setDesktopVisible(Long desktopVisible)
+    {
+        this.desktopVisible = desktopVisible;
+    }
+
+    public Long getDesktopVisible()
+    {
+        return desktopVisible;
+    }
+
+    public void setLastInteractTime(Date lastInteractTime)
+    {
+        this.lastInteractTime = lastInteractTime;
+    }
+
+    public Date getLastInteractTime()
+    {
+        return lastInteractTime;
+    }
+
+    public void setLastDecayTime(Date lastDecayTime)
+    {
+        this.lastDecayTime = lastDecayTime;
+    }
+
+    public Date getLastDecayTime()
+    {
+        return lastDecayTime;
+    }
+
     public void setDeleted(Long deleted) 
     {
         this.deleted = deleted;
@@ -255,6 +361,14 @@ public class VirtualPet extends BaseEntity
             .append("cleanliness", getCleanliness())
             .append("health", getHealth())
             .append("status", getStatus())
+            .append("intimacy", getIntimacy())
+            .append("growthStage", getGrowthStage())
+            .append("moodState", getMoodState())
+            .append("desktopX", getDesktopX())
+            .append("desktopY", getDesktopY())
+            .append("desktopVisible", getDesktopVisible())
+            .append("lastInteractTime", getLastInteractTime())
+            .append("lastDecayTime", getLastDecayTime())
             .append("deleted", getDeleted())
             .append("createTime", getCreateTime())
             .append("updateTime", getUpdateTime())

@@ -20,6 +20,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="cleanliness"    column="cleanliness"    />
         <result property="health"    column="health"    />
         <result property="status"    column="status"    />
+        <result property="intimacy"    column="intimacy"    />
+        <result property="growthStage"    column="growth_stage"    />
+        <result property="moodState"    column="mood_state"    />
+        <result property="desktopX"    column="desktop_x"    />
+        <result property="desktopY"    column="desktop_y"    />
+        <result property="desktopVisible"    column="desktop_visible"    />
+        <result property="lastInteractTime"    column="last_interact_time"    />
+        <result property="lastDecayTime"    column="last_decay_time"    />
         <result property="deleted"    column="deleted"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateTime"    column="update_time"    />
@@ -59,6 +67,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="cleanliness != null">cleanliness,</if>
             <if test="health != null">health,</if>
             <if test="status != null">status,</if>
+            <if test="intimacy != null">intimacy,</if>
+            <if test="growthStage != null">growth_stage,</if>
+            <if test="moodState != null">mood_state,</if>
+            <if test="desktopX != null">desktop_x,</if>
+            <if test="desktopY != null">desktop_y,</if>
+            <if test="desktopVisible != null">desktop_visible,</if>
+            <if test="lastInteractTime != null">last_interact_time,</if>
+            <if test="lastDecayTime != null">last_decay_time,</if>
             <if test="deleted != null">deleted,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateTime != null">update_time,</if>
@@ -77,6 +93,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="cleanliness != null">#{cleanliness},</if>
             <if test="health != null">#{health},</if>
             <if test="status != null">#{status},</if>
+            <if test="intimacy != null">#{intimacy},</if>
+            <if test="growthStage != null">#{growthStage},</if>
+            <if test="moodState != null">#{moodState},</if>
+            <if test="desktopX != null">#{desktopX},</if>
+            <if test="desktopY != null">#{desktopY},</if>
+            <if test="desktopVisible != null">#{desktopVisible},</if>
+            <if test="lastInteractTime != null">#{lastInteractTime},</if>
+            <if test="lastDecayTime != null">#{lastDecayTime},</if>
             <if test="deleted != null">#{deleted},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateTime != null">#{updateTime},</if>
@@ -99,6 +123,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="cleanliness != null">cleanliness = #{cleanliness},</if>
             <if test="health != null">health = #{health},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="intimacy != null">intimacy = #{intimacy},</if>
+            <if test="growthStage != null">growth_stage = #{growthStage},</if>
+            <if test="moodState != null">mood_state = #{moodState},</if>
+            <if test="desktopX != null">desktop_x = #{desktopX},</if>
+            <if test="desktopY != null">desktop_y = #{desktopY},</if>
+            <if test="desktopVisible != null">desktop_visible = #{desktopVisible},</if>
+            <if test="lastInteractTime != null">last_interact_time = #{lastInteractTime},</if>
+            <if test="lastDecayTime != null">last_decay_time = #{lastDecayTime},</if>
             <if test="deleted != null">deleted = #{deleted},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.virtualPet.mapper.PetActionRecordMapper">
+
+    <resultMap type="PetActionRecord" id="PetActionRecordResult">
+        <result property="id" column="id" />
+        <result property="petId" column="pet_id" />
+        <result property="userId" column="user_id" />
+        <result property="actionCode" column="action_code" />
+        <result property="actionName" column="action_name" />
+        <result property="triggerSource" column="trigger_source" />
+        <result property="beforeSnapshot" column="before_snapshot" />
+        <result property="afterSnapshot" column="after_snapshot" />
+        <result property="rewardExp" column="reward_exp" />
+        <result property="bubbleText" column="bubble_text" />
+        <result property="actionTime" column="action_time" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="selectPetActionRecordVo">
+        select id, pet_id, user_id, action_code, action_name, trigger_source, before_snapshot, after_snapshot, reward_exp, bubble_text, action_time, create_time from pet_action_record
+    </sql>
+
+    <select id="selectPetActionRecordList" parameterType="PetActionRecord" resultMap="PetActionRecordResult">
+        <include refid="selectPetActionRecordVo"/>
+        <where>
+            <if test="petId != null"> and pet_id = #{petId}</if>
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="actionCode != null and actionCode != ''"> and action_code = #{actionCode}</if>
+            <if test="triggerSource != null and triggerSource != ''"> and trigger_source = #{triggerSource}</if>
+        </where>
+        order by action_time desc, id desc
+    </select>
+
+    <select id="selectPetActionRecordById" parameterType="Long" resultMap="PetActionRecordResult">
+        <include refid="selectPetActionRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertPetActionRecord" parameterType="PetActionRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into pet_action_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="petId != null">pet_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="actionCode != null and actionCode != ''">action_code,</if>
+            <if test="actionName != null and actionName != ''">action_name,</if>
+            <if test="triggerSource != null and triggerSource != ''">trigger_source,</if>
+            <if test="beforeSnapshot != null">before_snapshot,</if>
+            <if test="afterSnapshot != null">after_snapshot,</if>
+            <if test="rewardExp != null">reward_exp,</if>
+            <if test="bubbleText != null">bubble_text,</if>
+            <if test="actionTime != null">action_time,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="petId != null">#{petId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="actionCode != null and actionCode != ''">#{actionCode},</if>
+            <if test="actionName != null and actionName != ''">#{actionName},</if>
+            <if test="triggerSource != null and triggerSource != ''">#{triggerSource},</if>
+            <if test="beforeSnapshot != null">#{beforeSnapshot},</if>
+            <if test="afterSnapshot != null">#{afterSnapshot},</if>
+            <if test="rewardExp != null">#{rewardExp},</if>
+            <if test="bubbleText != null">#{bubbleText},</if>
+            <if test="actionTime != null">#{actionTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <delete id="deletePetActionRecordById" parameterType="Long">
+        delete from pet_action_record where id = #{id}
+    </delete>
+
+    <delete id="deletePetActionRecordByIds" parameterType="String">
+        delete from pet_action_record where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
