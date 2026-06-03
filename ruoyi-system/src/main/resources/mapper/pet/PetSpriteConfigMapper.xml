@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.virtualPet.mapper.PetSpriteConfigMapper">
+
+    <resultMap type="com.ruoyi.virtualPet.domain.PetSpriteConfig" id="PetSpriteConfigResult">
+        <result property="id"           column="id"           />
+        <result property="petTypeId"    column="pet_type_id"  />
+        <result property="spriteImage"  column="sprite_image" />
+        <result property="cellW"        column="cell_w"       />
+        <result property="cellH"        column="cell_h"       />
+        <result property="fps"          column="fps"          />
+        <result property="actions"      column="actions"      />
+        <result property="status"       column="status"       />
+        <result property="createTime"   column="create_time"  />
+        <result property="updateTime"   column="update_time"  />
+        <result property="petTypeName"  column="pet_type_name" />
+    </resultMap>
+
+    <sql id="selectPetSpriteConfigVo">
+        select sc.id, sc.pet_type_id, sc.sprite_image, sc.cell_w, sc.cell_h,
+               sc.fps, sc.actions, sc.status, sc.create_time, sc.update_time,
+               pt.type_name as pet_type_name
+        from pet_sprite_config sc
+        left join pet_type pt on pt.id = sc.pet_type_id
+    </sql>
+
+    <select id="selectPetSpriteConfigById" parameterType="Long" resultMap="PetSpriteConfigResult">
+        <include refid="selectPetSpriteConfigVo"/>
+        where sc.id = #{id}
+    </select>
+
+    <select id="selectByPetTypeId" parameterType="Long" resultMap="PetSpriteConfigResult">
+        <include refid="selectPetSpriteConfigVo"/>
+        where sc.pet_type_id = #{petTypeId} and sc.status = '0'
+        limit 1
+    </select>
+
+    <select id="selectPetSpriteConfigList" parameterType="com.ruoyi.virtualPet.domain.PetSpriteConfig" resultMap="PetSpriteConfigResult">
+        <include refid="selectPetSpriteConfigVo"/>
+        <where>
+            <if test="petTypeId != null and petTypeId != ''">
+                and sc.pet_type_id = #{petTypeId}
+            </if>
+            <if test="status != null and status != ''">
+                and sc.status = #{status}
+            </if>
+        </where>
+        order by sc.id
+    </select>
+
+    <insert id="insertPetSpriteConfig" parameterType="com.ruoyi.virtualPet.domain.PetSpriteConfig" useGeneratedKeys="true" keyProperty="id">
+        insert into pet_sprite_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="petTypeId != null">pet_type_id,</if>
+            <if test="spriteImage != null and spriteImage != ''">sprite_image,</if>
+            <if test="cellW != null">cell_w,</if>
+            <if test="cellH != null">cell_h,</if>
+            <if test="fps != null">fps,</if>
+            <if test="actions != null and actions != ''">actions,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="petTypeId != null">#{petTypeId},</if>
+            <if test="spriteImage != null and spriteImage != ''">#{spriteImage},</if>
+            <if test="cellW != null">#{cellW},</if>
+            <if test="cellH != null">#{cellH},</if>
+            <if test="fps != null">#{fps},</if>
+            <if test="actions != null and actions != ''">#{actions},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updatePetSpriteConfig" parameterType="com.ruoyi.virtualPet.domain.PetSpriteConfig">
+        update pet_sprite_config
+        <set>
+            <if test="petTypeId != null">pet_type_id = #{petTypeId},</if>
+            <if test="spriteImage != null">sprite_image = #{spriteImage},</if>
+            <if test="cellW != null">cell_w = #{cellW},</if>
+            <if test="cellH != null">cell_h = #{cellH},</if>
+            <if test="fps != null">fps = #{fps},</if>
+            <if test="actions != null">actions = #{actions},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePetSpriteConfigById" parameterType="Long">
+        delete from pet_sprite_config where id = #{id}
+    </delete>
+
+    <delete id="deletePetSpriteConfigByIds" parameterType="String">
+        delete from pet_sprite_config where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
